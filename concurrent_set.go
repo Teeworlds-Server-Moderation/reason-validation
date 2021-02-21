@@ -7,11 +7,13 @@ import (
 	"github.com/jszwec/csvutil"
 )
 
+// CSet is a concurrent set that is used as key value store
 type CSet struct {
 	m  map[string]map[string]string
 	mu sync.Mutex
 }
 
+// NewCSet creates a new Concurrent Set
 func NewCSet() CSet {
 	m := CSet{
 		m: make(map[string]map[string]string),
@@ -29,6 +31,7 @@ func (cs *CSet) Add(reason, action, reaction string) {
 	cs.m[reason][action] = reaction
 }
 
+// Get a reaction based on the reason and the action (kick or specvote)
 func (cs *CSet) Get(reason, action string) (reaction string, ok bool) {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
