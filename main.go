@@ -14,11 +14,12 @@ import (
 )
 
 var (
-	cfg           = &Config{}
-	store         = NewCSet()
-	applicationID = "reason-volidation"
-	subscriber    *amqp.Subscriber
-	publisher     *amqp.Publisher
+	cfg                = &Config{}
+	store              = NewCSet()
+	applicationID      = "reason-validation"
+	unknownReasonQueue = "unknown-vote-reason"
+	subscriber         *amqp.Subscriber
+	publisher          *amqp.Publisher
 )
 
 func brokerCredentials(c *Config) (address, username, password string) {
@@ -104,7 +105,7 @@ func main() {
 			log.Fatalln(err)
 		}
 		for msg := range next {
-			if err := processMessage(string(msg.Body), publisher, cfg); err != nil {
+			if err := processMessage(string(msg.Body), publisher, cfg, store); err != nil {
 				log.Printf("Error processing message: %s\n", err)
 			}
 		}
