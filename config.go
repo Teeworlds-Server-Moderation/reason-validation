@@ -47,12 +47,14 @@ func (c *Config) Options() (options configo.Options) {
 		{
 			Key:           "BROKER_ADDRESS",
 			Description:   "The address of the message broker. In the container environemt it's rabbitmq:5672",
+			Mandatory:     true,
 			DefaultValue:  "localhost:5672",
 			ParseFunction: configo.DefaultParserRegex(&c.BrokerAddress, brokerAddressRegex, "BROKER_ADDRESS must have the format <hostname/ip>:<port>"),
 		},
 		{
 			Key:           "BROKER_USER",
 			Description:   "Username of the broker user",
+			Mandatory:     true,
 			DefaultValue:  "tw-admin",
 			ParseFunction: configo.DefaultParserString(&c.BrokerUsername),
 		},
@@ -62,25 +64,6 @@ func (c *Config) Options() (options configo.Options) {
 			Description:   "Password of the specified username",
 			ParseFunction: configo.DefaultParserString(&c.BrokerPassword),
 		},
-		{
-			Key:           "REDIS_ADDRESS",
-			Description:   "This is the root path that is used to store and read configuration data.",
-			DefaultValue:  "localhost:6379",
-			ParseFunction: configo.DefaultParserRegex(&c.RedisAddress, redisAddressRegex, "The REDIS_ADDRESS must have the following format: <hostname/ip>:<port>"),
-		},
-		{
-			Key:           "REDIS_PASSWORD",
-			Description:   "Pasword used for the redis database, can be left empty.",
-			DefaultValue:  "",
-			ParseFunction: configo.DefaultParserString(&c.RedisPassword),
-		},
-		{
-			Key:           "REDIS_DB",
-			Description:   "Is one of the 16 [0:15] ditinct databases that redis offers.",
-			DefaultValue:  "3",
-			ParseFunction: configo.DefaultParserRangesInt(&c.RedisDatabase, 0, 15),
-		},
-
 		{
 			Key:           "DATA_PATH",
 			Description:   "Is the root folder that contains all of the data of this service.",
