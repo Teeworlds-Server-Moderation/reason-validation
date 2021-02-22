@@ -21,6 +21,7 @@ FROM alpine:latest as minimal
 ENV MONITOR_BROKER_ADDRESS=rabbitmq:5672
 ENV MONITOR_BROKER_USER="tw-admin"
 ENV MONITOR_BROKER_PASSWORD=""
+ENV DATA_PATH="/data"
 
 WORKDIR /app
 COPY --from=build /build/reason-validation .
