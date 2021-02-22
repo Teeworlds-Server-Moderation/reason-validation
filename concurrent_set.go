@@ -14,11 +14,10 @@ type CSet struct {
 }
 
 // NewCSet creates a new Concurrent Set
-func NewCSet() CSet {
-	m := CSet{
-		m: make(map[string]map[string]string),
+func NewCSet() *CSet {
+	return &CSet{
+		m: make(map[string]map[string]string, 1024),
 	}
-	return m
 }
 
 // Add reason "fv" action "kickvote", reaction "voteban"
