@@ -26,6 +26,7 @@ var (
 	subscriber         *amqp.Subscriber
 	publisher          *amqp.Publisher
 	profile            *os.File
+	startupTime        = time.Now()
 )
 
 func brokerCredentials(c *Config) (address, username, password string) {
@@ -145,6 +146,11 @@ func main() {
 			case <-ctx.Done():
 				log.Println("Closing backup routine...")
 
+				if time.Now().Before(startupTime.Add(cfg.DurationBeforeFirstBackup)) {
+					return
+				}
+
+				log.Println("Creating backup...")
 				filename := time.Now().Format(time.RFC3339) + ".csv"
 				filename = path.Join(cfg.DataPath, filename)
 				data, err := store.DumpCSV()
