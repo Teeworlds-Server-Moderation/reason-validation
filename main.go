@@ -1,11 +1,16 @@
 package main
 
 import (
+	"context"
+	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/signal"
+	"path"
 	"syscall"
+	"time"
 
 	"github.com/Teeworlds-Server-Moderation/common/amqp"
 	"github.com/Teeworlds-Server-Moderation/common/env"
@@ -20,6 +25,7 @@ var (
 	unknownReasonQueue = "unknown-vote-reason"
 	subscriber         *amqp.Subscriber
 	publisher          *amqp.Publisher
+	profile            *os.File
 )
 
 func brokerCredentials(c *Config) (address, username, password string) {
@@ -93,12 +99,31 @@ func init() {
 		events.TypeVoteSpecStarted,
 	)
 
+	err = initializeKeyValueStore(store, cfg.DataPath)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
+	flag.Parse()
+	if *cpuprofile != "" {
+		profile, err = os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
 }
 
 func main() {
+	ctx, cancel := context.WithCancel(context.Background())
 	defer publisher.Close()
 	defer subscriber.Close()
+	defer cancel()
+	if profile != nil {
+		defer profile.Close()
+	}
 
+	// message processing
 	go func() {
 		next, err := subscriber.Consume(applicationID)
 		if err != nil {
@@ -107,6 +132,47 @@ func main() {
 		for msg := range next {
 			if err := processMessage(string(msg.Body), publisher, cfg, store); err != nil {
 				log.Printf("Error processing message: %s\n", err)
+			}
+		}
+	}()
+
+	// database backups
+	go func() {
+		ticker := time.NewTicker(cfg.BackupInterval)
+
+		for {
+			select {
+			case <-ctx.Done():
+				log.Println("Closing backup routine...")
+
+				filename := time.Now().Format(time.RFC3339) + ".csv"
+				filename = path.Join(cfg.DataPath, filename)
+				data, err := store.DumpCSV()
+				if err != nil {
+					log.Printf("Failed to retrieve data for backup: %v\n", err)
+					continue
+				}
+				err = ioutil.WriteFile(filename, data, 0660)
+				if err != nil {
+					log.Printf("Failed to write data to file '%s': %v", filename, err)
+					continue
+				}
+
+				return
+			case now := <-ticker.C:
+				filename := now.Format(time.RFC3339) + ".csv"
+				filename = path.Join(cfg.DataPath, filename)
+				data, err := store.DumpCSV()
+				if err != nil {
+					log.Printf("Failed to retrieve data for backup: %v\n", err)
+					continue
+				}
+				err = ioutil.WriteFile(filename, data, 0660)
+				if err != nil {
+					log.Printf("Failed to write data to file '%s': %v", filename, err)
+					continue
+				}
+
 			}
 		}
 	}()

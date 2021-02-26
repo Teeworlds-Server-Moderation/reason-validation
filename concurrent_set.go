@@ -1,6 +1,7 @@
 package main
 
 import (
+	"sort"
 	"sync"
 
 	"github.com/Teeworlds-Server-Moderation/common/events"
@@ -16,7 +17,7 @@ type CSet struct {
 // NewCSet creates a new Concurrent Set
 func NewCSet() *CSet {
 	return &CSet{
-		m: make(map[string]map[string]string, 1024),
+		m: make(map[string]map[string]string, 4096),
 	}
 }
 
@@ -25,7 +26,7 @@ func (cs *CSet) Add(reason, action, reaction string) {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 	if cs.m[reason] == nil {
-		cs.m[reason] = make(map[string]string)
+		cs.m[reason] = make(map[string]string, 2)
 	}
 	cs.m[reason][action] = reaction
 }
@@ -71,6 +72,9 @@ func (cs *CSet) DumpCSV() ([]byte, error) {
 			KickvoteAction: kickvoteReaction,
 		})
 	}
+
+	// sort before dumping
+	sort.Sort(unknownAtFrontAndSortedByReason(list))
 
 	return csvutil.Marshal(list)
 }

@@ -18,6 +18,8 @@ type ReasonEvent struct {
 }
 
 func processMessage(message string, publisher *amqp.Publisher, cfg *Config, cs *CSet) error {
+
+	log.Println("Received message: ", message)
 	event := ReasonEvent{}
 	err := json.Unmarshal([]byte(message), &event)
 	if err != nil {
@@ -30,11 +32,29 @@ func processMessage(message string, publisher *amqp.Publisher, cfg *Config, cs *
 		if err := publisher.Publish("", unknownReasonQueue, message); err != nil {
 			return err
 		}
-		reaction = "abort"
+		reaction = "unknown"
+		// Add new reasons
+		cs.AddFromCSV(Reason{
+			Reason:         event.Reason,
+			SpecVoteAction: "unknown",
+			KickvoteAction: "unknown",
+		})
 	}
 
 	switch reaction {
 	case "voteban":
+		err := requestCommandExecForPlayer(
+			publisher,
+			0,
+			event.Source,
+			"vote no",
+			"",
+			event.EventSource,
+			false,
+		)
+		if err != nil {
+			return err
+		}
 		return requestCommandExecForPlayer(
 			publisher,
 			cfg.DefaultVotebanDuration,
@@ -48,7 +68,7 @@ func processMessage(message string, publisher *amqp.Publisher, cfg *Config, cs *
 		log.Println("Ignoring: ", message)
 		return nil
 	default:
-		// abort
+		// abort & unknown
 		err := requestCommandExecForPlayer(
 			publisher,
 			0,

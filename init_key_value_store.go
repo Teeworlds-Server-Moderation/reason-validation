@@ -25,9 +25,10 @@ func initializeKeyValueStore(cs *CSet, dataFolderPath string) error {
 		if err != nil {
 			return nil
 		}
-		var list []Reason
-		err = csvutil.Unmarshal(b, list)
+		list := []Reason{}
+		err = csvutil.Unmarshal(b, &list)
 		if err != nil {
+			log.Printf("Failed to read: %s : %v\n", path, err)
 			return nil
 		}
 		log.Printf("Read %d lines in: %s\n", len(list), path)

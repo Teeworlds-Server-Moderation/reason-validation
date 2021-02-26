@@ -29,6 +29,8 @@ type Config struct {
 	BroadcastNonAbortActions bool
 	DefaultVotebanCommand    string
 	DefaultVotebanDuration   time.Duration
+
+	BackupInterval time.Duration
 }
 
 // Name is the name of the configuration Cache
@@ -87,6 +89,12 @@ func (c *Config) Options() (options configo.Options) {
 			Description:   "You may use the variables {IP}, {ID}, {DURATION:MINUTES}, {DURATION:SECONDS}, {REASON}",
 			DefaultValue:  "voteban {IP} {DURATION:SECONDS}",
 			ParseFunction: configo.DefaultParserString(&c.DefaultVotebanCommand),
+		},
+		{
+			Key:           "CSV_BACKUP_INTERVAL",
+			Description:   "Interval after which a new csv file is created that contains new unclissified reason lines",
+			DefaultValue:  "24h",
+			ParseFunction: configo.DefaultParserDuration(&c.BackupInterval),
 		},
 	}
 
