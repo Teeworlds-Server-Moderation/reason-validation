@@ -18,9 +18,9 @@ RUN go get -d && go build -a -ldflags '-w -extldflags "-static"' -o reason-valid
 
 FROM alpine:latest as minimal
 
-ENV MONITOR_BROKER_ADDRESS=rabbitmq:5672
-ENV MONITOR_BROKER_USER="tw-admin"
-ENV MONITOR_BROKER_PASSWORD=""
+ENV BROKER_ADDRESS=rabbitmq:5672
+ENV BROKER_USER="tw-admin"
+ENV BROKER_PASSWORD=""
 ENV DATA_PATH="/data"
 
 WORKDIR /app
