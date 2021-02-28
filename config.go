@@ -20,11 +20,6 @@ type Config struct {
 	BrokerUsername string
 	BrokerPassword string
 
-	// static database with ip ranges
-	RedisAddress  string
-	RedisPassword string
-	RedisDatabase int
-
 	DataPath                 string
 	BroadcastNonAbortActions bool
 	DefaultVotebanCommand    string

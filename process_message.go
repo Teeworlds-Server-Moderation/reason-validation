@@ -67,7 +67,7 @@ func processMessage(message string, publisher *amqp.Publisher, cfg *Config, cs *
 	case "ignore":
 		log.Println("Ignoring: ", message)
 		return nil
-	default:
+	case "abort":
 		// abort & unknown
 		err := requestCommandExecForPlayer(
 			publisher,
@@ -81,7 +81,9 @@ func processMessage(message string, publisher *amqp.Publisher, cfg *Config, cs *
 		if err != nil {
 			return err
 		}
+
 		// send info message
+		// only for known
 		err = requestCommandExecForPlayer(
 			publisher,
 			0,
@@ -91,9 +93,17 @@ func processMessage(message string, publisher *amqp.Publisher, cfg *Config, cs *
 			event.EventSource,
 			false,
 		)
-		if err != nil {
-			return err
-		}
+		return err
 	}
-	return nil
+
+	// unknown
+	return requestCommandExecForPlayer(
+		publisher,
+		0,
+		event.Source,
+		"vote no",
+		"",
+		event.EventSource,
+		false,
+	)
 }
