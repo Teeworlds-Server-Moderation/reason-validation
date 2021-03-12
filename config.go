@@ -25,8 +25,7 @@ type Config struct {
 	DefaultVotebanCommand    string
 	DefaultVotebanDuration   time.Duration
 
-	BackupInterval            time.Duration
-	DurationBeforeFirstBackup time.Duration
+	BackupInterval time.Duration
 }
 
 // Name is the name of the configuration Cache
@@ -91,12 +90,6 @@ func (c *Config) Options() (options configo.Options) {
 			Description:   "Interval after which a new csv file is created that contains new unclissified reason lines",
 			DefaultValue:  "24h",
 			ParseFunction: configo.DefaultParserDuration(&c.BackupInterval),
-		},
-		{
-			Key:           "MIN_TIME_RUN_BEFORE_FIRST_CSV_BACKUP",
-			Description:   "Time the application needs to run before any backup is created.",
-			DefaultValue:  "4h",
-			ParseFunction: configo.DefaultParserDuration(&c.DurationBeforeFirstBackup),
 		},
 	}
 

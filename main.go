@@ -18,6 +18,7 @@ import (
 var (
 	cfg                = &Config{}
 	store              = NewCSet()
+	initialStoreSize   = 0
 	applicationID      = "reason-validation"
 	unknownReasonQueue = "unknown-vote-reason"
 	subscriber         *amqp.Subscriber
@@ -100,7 +101,7 @@ func init() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-
+	initialStoreSize = store.Size()
 }
 
 func main() {
@@ -123,7 +124,7 @@ func main() {
 	}()
 
 	// create periodic backups and when the service is stopped
-	go backupDatabase(ctx, store, cfg)
+	go backupDatabase(ctx, initialStoreSize, store, cfg)
 
 	// Messages will be delivered asynchronously so we just need to wait for a signal to shutdown
 	sig := make(chan os.Signal, 1)

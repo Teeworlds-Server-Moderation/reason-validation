@@ -21,6 +21,13 @@ func NewCSet() *CSet {
 	}
 }
 
+// Size returns the current map size
+func (cs *CSet) Size() int {
+	cs.mu.Lock()
+	defer cs.mu.Unlock()
+	return len(cs.m)
+}
+
 // Add reason "fv" action "kickvote", reaction "voteban"
 func (cs *CSet) Add(reason, action, reaction string) {
 	cs.mu.Lock()

@@ -21,39 +21,45 @@ func timeStamp() string {
 	)
 }
 
-func backupDatabase(ctx context.Context, cs *CSet, cfg *Config) {
+func backupDatabase(ctx context.Context, initStoreSize int, cs *CSet, cfg *Config) {
 	// database backups
 	ticker := time.NewTicker(cfg.BackupInterval)
 	defer ticker.Stop()
+
+	lastBackupSize := initStoreSize
 
 	for {
 		select {
 		case <-ctx.Done():
 			log.Println("Closing backup routine...")
 
-			if time.Now().Before(startupTime.Add(cfg.DurationBeforeFirstBackup)) {
+			if cs.Size() == lastBackupSize {
 				return
 			}
 
 			log.Println("Creating backup...")
-			filename := timeStamp() + ".csv"
-			filename = path.Join(cfg.DataPath, filename)
+			filename := path.Join(cfg.DataPath, timeStamp()+".csv")
 			data, err := cs.DumpCSV()
 			if err != nil {
 				log.Printf("Failed to retrieve data for backup: %v\n", err)
-				continue
+				return
 			}
 			err = ioutil.WriteFile(filename, data, 0660)
 			if err != nil {
 				log.Printf("Failed to write data to file '%s': %v", filename, err)
-				continue
+				return
 			}
 			log.Printf("Created backup: %s\n", filename)
 
 			return
 		case <-ticker.C:
-			filename := timeStamp() + ".csv"
-			filename = path.Join(cfg.DataPath, filename)
+			if lastBackupSize == cs.Size() {
+				// nothing new to backup
+				log.Printf("Skipping backup, as no changes.")
+				continue
+			}
+
+			filename := path.Join(cfg.DataPath, timeStamp()+".csv")
 			data, err := cs.DumpCSV()
 			if err != nil {
 				log.Printf("Failed to retrieve data for backup: %v\n", err)
@@ -64,8 +70,9 @@ func backupDatabase(ctx context.Context, cs *CSet, cfg *Config) {
 				log.Printf("Failed to write data to file '%s': %v", filename, err)
 				continue
 			}
+			// update last size
+			lastBackupSize = cs.Size()
 			log.Printf("Created backup: %s\n", filename)
-
 		}
 	}
 
